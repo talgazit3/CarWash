@@ -8,8 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
     
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCQ65NXKQ0tfw5z23QjLquUdVPBWcjkB64",
@@ -20,6 +20,7 @@
             appId: "1:681354094389:web:4f491efc9689ca25f7ce7c"
         };
 
+        // אתחול Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
@@ -63,7 +64,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(message)
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Discord Error:", e); }
         }
 
         window.sendReview = async () => {
@@ -78,40 +79,55 @@
             }
 
             try {
-                await addDoc(collection(db, "reviews"), { name, text, stars: currentRating, date: new Date() });
+                // ניסיון כתיבה ל-Firestore
+                await addDoc(collection(db, "reviews"), { 
+                    name: name, 
+                    text: text, 
+                    stars: currentRating, 
+                    date: new Date() 
+                });
+                
                 document.getElementById('revName').value = '';
                 document.getElementById('revText').value = '';
                 setRating(0);
                 alert("הביקורת פורסמה בהצלחה!");
-            } catch (e) { alert("שגיאה בשליחה"); }
+            } catch (e) { 
+                console.error("Firestore Error:", e);
+                alert("שגיאה בשליחה: " + e.message); 
+            }
         };
 
-        window.sendDevFeedback = () => {
-            const errorDiv = document.getElementById('dev-error');
+        window.sendDevFeedback = async () => {
             if(devRating === 0) {
-                errorDiv.classList.remove('hidden');
-                setTimeout(() => errorDiv.classList.add('hidden'), 3000);
+                document.getElementById('dev-error').classList.remove('hidden');
+                setTimeout(() => document.getElementById('dev-error').classList.add('hidden'), 3000);
                 return;
             }
             
             const cardContent = document.getElementById('dev-card-content');
-            cardContent.innerHTML = `
-                <div class="text-center py-6 animate-fade-in">
-                    <div class="text-4xl mb-3">❤️</div>
-                    <p class="text-blue-600 font-bold text-xl mb-1">תודה רבה!</p>
-                    <p class="text-slate-600 font-medium">המשוב שלך נשלח בהצלחה.</p>
-                </div>
-            `;
+            const originalHTML = cardContent.innerHTML;
+            
+            cardContent.innerHTML = `<div class="text-center py-6">שולח...</div>`;
 
-            sendToDiscord(devRating);
-            addDoc(collection(db, "dev_feedback"), { stars: devRating, date: new Date() })
-                .catch(e => console.error(e));
+            try {
+                await addDoc(collection(db, "dev_feedback"), { stars: devRating, date: new Date() });
+                sendToDiscord(devRating);
+                
+                cardContent.innerHTML = `
+                    <div class="text-center py-6 animate-fade-in">
+                        <div class="text-4xl mb-3">❤️</div>
+                        <p class="text-blue-600 font-bold text-xl mb-1">תודה רבה!</p>
+                        <p class="text-slate-600 font-medium">המשוב שלך נשלח בהצלחה.</p>
+                    </div>`;
 
-            setTimeout(() => {
-                const popup = document.getElementById('dev-popup');
-                popup.style.transform = 'translateY(150%)';
-                setTimeout(() => popup.classList.add('hidden'), 800);
-            }, 2500);
+                setTimeout(() => {
+                    closeDevPopup();
+                }, 2500);
+            } catch (e) {
+                console.error("Dev Feedback Error:", e);
+                cardContent.innerHTML = originalHTML;
+                alert("שגיאה בשליחת המשוב");
+            }
         };
 
         window.closeDevPopup = () => {
@@ -122,12 +138,14 @@
 
         setTimeout(() => {
             const popup = document.getElementById('dev-popup');
-            popup.style.transform = 'translateY(0)';
+            if (popup) popup.style.transform = 'translateY(0)';
         }, 5000);
 
+        // טעינת ביקורות בזמן אמת
         const q = query(collection(db, "reviews"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('reviewsList');
+            if (!list) return;
             list.innerHTML = '';
             snapshot.forEach((doc) => {
                 const data = doc.data();
@@ -139,6 +157,8 @@
                         <p class="text-slate-600 text-sm leading-relaxed">${data.text}</p>
                     </div>`;
             });
+        }, (error) => {
+            console.error("Snapshot Error:", error);
         });
     </script>
 
@@ -149,8 +169,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         #dev-popup { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(150%); }
-        
-        /* מונע זום אוטומטי באייפון בכניסה לאינפוט */
         input, textarea { font-size: 16px !important; }
     </style>
 </head>
@@ -163,11 +181,9 @@
             <p class="text-slate-500 text-[11px] leading-relaxed mb-3">
                 האתר נבנה על ידי <strong>טל גזית</strong>. דירוג קצר ממך יעזור לי מאוד!
             </p>
-            
             <div id="dev-error" class="hidden bg-red-50 text-red-500 text-[10px] p-2 rounded-lg mb-2 text-center animate-fade-in">
                 נא לבחור דירוג ⭐
             </div>
-
             <div class="flex justify-center gap-2 mb-3" dir="ltr">
                 <span id="dev-star-1" onclick="setDevRating(1)" class="dev-star">★</span>
                 <span id="dev-star-2" onclick="setDevRating(2)" class="dev-star">★</span>
@@ -227,11 +243,9 @@
     <section id="reviews" class="py-16 bg-blue-600 px-4">
         <div class="max-w-md mx-auto bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 text-center shadow-xl">
             <h2 class="text-3xl font-black mb-6 text-white italic">איך היה השירות?</h2>
-            
             <div id="review-error" class="hidden bg-red-500 text-white p-3 rounded-xl mb-4 text-xs font-bold animate-fade-in shadow-md">
                 נא למלא הכל ולבחור כוכבים ⚠️
             </div>
-
             <div class="flex justify-center gap-2 mb-6" dir="ltr">
                 <span id="star-1" onclick="setRating(1)" class="star-icon">★</span>
                 <span id="star-2" onclick="setRating(2)" class="star-icon">★</span>
