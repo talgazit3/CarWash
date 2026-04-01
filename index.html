@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>יהלי CarWash | שטיפת רכבים פרימיום</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQ65NXKQ0tfw5z23QjLquUdVPBWcjkB64",
+            authDomain: "carwash-4fca6.firebaseapp.com",
+            projectId: "carwash-4fca6",
+            storageBucket: "carwash-4fca6.firebasestorage.app",
+            messagingSenderId: "681354094389",
+            appId: "1:681354094389:web:4f491efc9689ca25f7ce7c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        let currentRating = 0;
+        let devRating = 0;
+
+        window.setRating = (n) => {
+            currentRating = n;
+            for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById(`star-${i}`);
+                star.style.color = i <= n ? "#facc15" : "white";
+            }
+        };
+
+        window.setDevRating = (n) => {
+            devRating = n;
+            for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById(`dev-star-${i}`);
+                star.style.color = i <= n ? "#facc15" : "#cbd5e1";
+            }
+        };
+
+        async function sendToDiscord(stars) {
+            const WEBHOOK_URL = "https://discord.com/api/webhooks/1488855382528098465/hLB3iMw3Xv_T37oQxHe3G8MuqxX0bFhpkhxKsldsmXqJFrJ1kTXMfdUd7egFWzf_C_7G";
+            const message = {
+                username: "מערכת דירוג אתרים (טל גזית)",
+                embeds: [{
+                    title: "🚀 דירוג חדש!",
+                    description: `מישהו דירג את האתר ב-**${stars} כוכבים**.`,
+                    color: 5814783,
+                    fields: [
+                        { name: "דירוג", value: "⭐".repeat(stars), inline: true },
+                        { name: "פרויקט", value: "יהלי CarWash", inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            };
+            try {
+                await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(message)
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        window.sendReview = async () => {
+            const name = document.getElementById('revName').value;
+            const text = document.getElementById('revText').value;
+            const errorDiv = document.getElementById('review-error');
+
+            if(!name || !text || currentRating === 0) {
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => errorDiv.classList.add('hidden'), 3000);
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "reviews"), { name, text, stars: currentRating, date: new Date() });
+                document.getElementById('revName').value = '';
+                document.getElementById('revText').value = '';
+                setRating(0);
+                alert("הביקורת פורסמה בהצלחה!");
+            } catch (e) { alert("שגיאה בשליחה"); }
+        };
+
+        window.sendDevFeedback = () => {
+            const errorDiv = document.getElementById('dev-error');
+            if(devRating === 0) {
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => errorDiv.classList.add('hidden'), 3000);
+                return;
+            }
+            
+            const cardContent = document.getElementById('dev-card-content');
+            cardContent.innerHTML = `
+                <div class="text-center py-6 animate-fade-in">
+                    <div class="text-4xl mb-3">❤️</div>
+                    <p class="text-blue-600 font-bold text-xl mb-1">תודה רבה!</p>
+                    <p class="text-slate-600 font-medium">המשוב שלך נשלח בהצלחה.</p>
+                </div>
+            `;
+
+            sendToDiscord(devRating);
+            addDoc(collection(db, "dev_feedback"), { stars: devRating, date: new Date() })
+                .catch(e => console.error(e));
+
+            setTimeout(() => {
+                const popup = document.getElementById('dev-popup');
+                popup.style.transform = 'translateY(150%)';
+                setTimeout(() => popup.classList.add('hidden'), 800);
+            }, 2500);
+        };
+
+        window.closeDevPopup = () => {
+            const popup = document.getElementById('dev-popup');
+            popup.style.transform = 'translateY(150%)';
+            setTimeout(() => popup.classList.add('hidden'), 800);
+        };
+
+        setTimeout(() => {
+            const popup = document.getElementById('dev-popup');
+            popup.style.transform = 'translateY(0)';
+        }, 5000);
+
+        const q = query(collection(db, "reviews"), orderBy("date", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const list = document.getElementById('reviewsList');
+            list.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const stars = "★".repeat(data.stars) + "☆".repeat(5-data.stars);
+                list.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 text-right border-r-4 border-blue-500 animate-fade-in mx-2">
+                        <div class="text-yellow-400 text-lg mb-1">${stars}</div>
+                        <p class="font-bold text-slate-900 text-sm">${data.name}</p>
+                        <p class="text-slate-600 text-sm leading-relaxed">${data.text}</p>
+                    </div>`;
+            });
+        });
+    </script>
+
+    <style>
+        body { font-family: 'Assistant', sans-serif; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+        .star-icon { cursor: pointer; font-size: clamp(2rem, 10vw, 2.5rem); color: white; transition: 0.2s; text-shadow: 0 0 5px rgba(0,0,0,0.2); }
+        .dev-star { cursor: pointer; font-size: 1.8rem; color: #cbd5e1; transition: 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        #dev-popup { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(150%); }
+        
+        /* מונע זום אוטומטי באייפון בכניסה לאינפוט */
+        input, textarea { font-size: 16px !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+
+    <div id="dev-popup" class="fixed bottom-4 right-4 left-4 md:left-auto md:w-80 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.15)] z-[100] p-5 rounded-[2rem] border border-slate-100">
+        <button onclick="closeDevPopup()" class="absolute top-4 left-4 text-slate-300 hover:text-slate-500 text-xl p-2">✕</button>
+        <div id="dev-card-content" class="text-right">
+            <p class="text-blue-600 font-bold text-sm mb-1">היי! נהנית מהאתר?</p>
+            <p class="text-slate-500 text-[11px] leading-relaxed mb-3">
+                האתר נבנה על ידי <strong>טל גזית</strong>. דירוג קצר ממך יעזור לי מאוד!
+            </p>
+            
+            <div id="dev-error" class="hidden bg-red-50 text-red-500 text-[10px] p-2 rounded-lg mb-2 text-center animate-fade-in">
+                נא לבחור דירוג ⭐
+            </div>
+
+            <div class="flex justify-center gap-2 mb-3" dir="ltr">
+                <span id="dev-star-1" onclick="setDevRating(1)" class="dev-star">★</span>
+                <span id="dev-star-2" onclick="setDevRating(2)" class="dev-star">★</span>
+                <span id="dev-star-3" onclick="setDevRating(3)" class="dev-star">★</span>
+                <span id="dev-star-4" onclick="setDevRating(4)" class="dev-star">★</span>
+                <span id="dev-star-5" onclick="setDevRating(5)" class="dev-star">★</span>
+            </div>
+            <button onclick="sendDevFeedback()" class="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold active:scale-95 transition">שלח דירוג לטל</button>
+        </div>
+    </div>
+
+    <nav class="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b p-3 px-5 flex justify-between items-center">
+        <a href="https://wa.me/972546873867" class="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold shadow-md active:bg-blue-700 transition">הזמן שטיפה</a>
+        <span class="text-xl font-black text-blue-600 italic tracking-tighter">יהלי CarWash</span>
+    </nav>
+
+    <section class="py-10 px-5 text-right flex flex-col gap-8 bg-blue-50/50">
+        <div class="order-1">
+            <h1 class="text-4xl font-black leading-[1.1] text-slate-900">שטיפה מושלמת <br><span class="text-blue-600 italic">עד הבית.</span></h1>
+            <div class="text-base text-slate-600 mt-4 leading-relaxed">
+                <p class="font-bold text-blue-700 mb-1">הסטנדרט החדש של ניקיון הרכב בבית לחם הגלילית ואלוני אבא.</p>
+                <p>שירות מקצועי הכולל ניקוי חיצוני ופנימי יסודי, שאיבה וייבוש מלא.</p>
+            </div>
+        </div>
+        <div class="order-2">
+            <img src="poster.jpg" class="rounded-[2rem] shadow-xl w-full h-64 object-cover border-4 border-white">
+        </div>
+    </section>
+
+    <section class="py-12 px-5 bg-white">
+        <h2 class="text-3xl font-black mb-8 text-center italic text-blue-600">מחירון שירותים</h2>
+        <div class="flex flex-col gap-4 max-w-md mx-auto">
+            <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 text-center">
+                <h3 class="text-xl font-bold mb-2 text-slate-800">ניקוי חיצוני</h3>
+                <div class="text-3xl font-black text-blue-600 mb-2">45-60 ₪</div>
+                <p class="text-xs text-slate-500 italic">שטיפה ידנית + ג'אנטים + ייבוש</p>
+            </div>
+            <div class="bg-blue-600 p-6 rounded-[2rem] text-white text-center shadow-lg relative overflow-hidden">
+                <div class="bg-yellow-400 text-blue-900 text-[10px] font-black py-1 px-3 rounded-full absolute top-3 right-3">מומלץ!</div>
+                <h3 class="text-xl font-bold mb-2">חיצוני ופנימי</h3>
+                <div class="text-3xl font-black mb-2">60-80 ₪</div>
+                <p class="text-xs opacity-80 italic">הכל כולל הכל + שאיבה ודשבורד</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-12 px-5">
+        <h2 class="text-2xl font-black mb-6 text-center italic text-blue-600 underline decoration-blue-200 underline-offset-4">העבודות שלנו</h2>
+        <div class="grid grid-cols-2 gap-3">
+            <img src="wheel.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
+            <img src="inside.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
+            <img src="side.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
+            <img src="main.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
+        </div>
+    </section>
+
+    <section id="reviews" class="py-16 bg-blue-600 px-4">
+        <div class="max-w-md mx-auto bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 text-center shadow-xl">
+            <h2 class="text-3xl font-black mb-6 text-white italic">איך היה השירות?</h2>
+            
+            <div id="review-error" class="hidden bg-red-500 text-white p-3 rounded-xl mb-4 text-xs font-bold animate-fade-in shadow-md">
+                נא למלא הכל ולבחור כוכבים ⚠️
+            </div>
+
+            <div class="flex justify-center gap-2 mb-6" dir="ltr">
+                <span id="star-1" onclick="setRating(1)" class="star-icon">★</span>
+                <span id="star-2" onclick="setRating(2)" class="star-icon">★</span>
+                <span id="star-3" onclick="setRating(3)" class="star-icon">★</span>
+                <span id="star-4" onclick="setRating(4)" class="star-icon">★</span>
+                <span id="star-5" onclick="setRating(5)" class="star-icon">★</span>
+            </div>
+            <div class="space-y-3">
+                <input id="revName" type="text" placeholder="השם שלך" class="w-full p-4 rounded-xl text-right outline-none text-slate-900 shadow-inner bg-white/95">
+                <textarea id="revText" placeholder="ספרו לנו על החוויה..." rows="3" class="w-full p-4 rounded-xl text-right outline-none text-slate-900 shadow-inner bg-white/95"></textarea>
+                <button onclick="sendReview()" class="w-full bg-white text-blue-600 font-black py-4 rounded-xl shadow-lg active:bg-slate-100 transition text-lg">פרסם ביקורת</button>
+            </div>
+        </div>
+        <div id="reviewsList" class="max-w-md mx-auto mt-10"></div>
+    </section>
+
+    <footer class="bg-slate-900 text-white py-12 text-center">
+        <div class="container mx-auto px-6">
+            <p class="text-2xl font-black italic mb-2">יהלי CarWash</p>
+            <p class="text-slate-400 text-base font-bold mb-8">054-6873867</p>
+            <div class="pt-8 border-t border-slate-800 opacity-40 text-[10px]">
+                <p>נבנה על ידי טל גזית &copy; 2026</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
