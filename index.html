@@ -20,7 +20,6 @@
             appId: "1:681354094389:web:4f491efc9689ca25f7ce7c"
         };
 
-        // אתחול Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
@@ -71,6 +70,7 @@
             const name = document.getElementById('revName').value;
             const text = document.getElementById('revText').value;
             const errorDiv = document.getElementById('review-error');
+            const reviewCard = document.getElementById('review-card-content');
 
             if(!name || !text || currentRating === 0) {
                 errorDiv.classList.remove('hidden');
@@ -78,8 +78,10 @@
                 return;
             }
 
+            const originalHTML = reviewCard.innerHTML;
+            reviewCard.innerHTML = `<div class="text-white py-10">שולח ביקורת...</div>`;
+
             try {
-                // ניסיון כתיבה ל-Firestore
                 await addDoc(collection(db, "reviews"), { 
                     name: name, 
                     text: text, 
@@ -87,12 +89,22 @@
                     date: new Date() 
                 });
                 
-                document.getElementById('revName').value = '';
-                document.getElementById('revText').value = '';
-                setRating(0);
-                alert("הביקורת פורסמה בהצלחה!");
+                reviewCard.innerHTML = `
+                    <div class="text-center py-6 animate-fade-in">
+                        <div class="text-5xl mb-4">✨</div>
+                        <p class="text-white font-bold text-2xl mb-2">הביקורת נשלחה!</p>
+                        <p class="text-blue-100 font-medium">תודה ששיתפת אותנו בחוויה שלך.</p>
+                    </div>`;
+
+                setTimeout(() => {
+                    reviewCard.innerHTML = originalHTML;
+                    currentRating = 0;
+                    setRating(0);
+                }, 4000);
+
             } catch (e) { 
                 console.error("Firestore Error:", e);
+                reviewCard.innerHTML = originalHTML;
                 alert("שגיאה בשליחה: " + e.message); 
             }
         };
@@ -141,7 +153,6 @@
             if (popup) popup.style.transform = 'translateY(0)';
         }, 5000);
 
-        // טעינת ביקורות בזמן אמת
         const q = query(collection(db, "reviews"), orderBy("date", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('reviewsList');
@@ -241,7 +252,7 @@
     </section>
 
     <section id="reviews" class="py-16 bg-blue-600 px-4">
-        <div class="max-w-md mx-auto bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 text-center shadow-xl">
+        <div id="review-card-content" class="max-w-md mx-auto bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 text-center shadow-xl">
             <h2 class="text-3xl font-black mb-6 text-white italic">איך היה השירות?</h2>
             <div id="review-error" class="hidden bg-red-500 text-white p-3 rounded-xl mb-4 text-xs font-bold animate-fade-in shadow-md">
                 נא למלא הכל ולבחור כוכבים ⚠️
