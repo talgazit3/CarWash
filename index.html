@@ -42,6 +42,22 @@
             }
         };
 
+        // פונקציות להגדלת תמונה
+        window.openImg = (src) => {
+            const modal = document.getElementById('imgModal');
+            const fullImg = document.getElementById('fullImg');
+            fullImg.src = src;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; // מונע גלילה ברקע
+        };
+
+        window.closeImg = () => {
+            document.getElementById('imgModal').classList.add('hidden');
+            document.getElementById('imgModal').classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        };
+
         async function sendToDiscord(stars) {
             const WEBHOOK_URL = "https://discord.com/api/webhooks/1488855382528098465/hLB3iMw3Xv_T37oQxHe3G8MuqxX0bFhpkhxKsldsmXqJFrJ1kTXMfdUd7egFWzf_C_7G";
             const message = {
@@ -179,9 +195,16 @@
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         #dev-popup { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(150%); }
         input, textarea { font-size: 16px !important; }
+        .clickable-img { cursor: pointer; transition: 0.3s; }
+        .clickable-img:hover { opacity: 0.9; transform: scale(1.02); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+
+    <div id="imgModal" class="fixed inset-0 bg-black/90 z-[500] hidden items-center justify-center p-4" onclick="closeImg()">
+        <span class="absolute top-5 left-5 text-white text-3xl font-bold cursor-pointer">&times;</span>
+        <img id="fullImg" class="max-w-full max-h-full rounded-lg shadow-2xl animate-fade-in">
+    </div>
 
     <div id="dev-popup" class="fixed bottom-4 right-4 left-4 md:left-auto md:w-80 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.15)] z-[100] p-5 rounded-[2rem] border border-slate-100">
         <button onclick="closeDevPopup()" class="absolute top-4 left-4 text-slate-300 hover:text-slate-500 text-xl p-2">✕</button>
@@ -217,7 +240,7 @@
                 <p>שירות מקצועי הכולל ניקוי חיצוני ופנימי יסודי, שאיבה וייבוש מלא</p> <br> שלום, קוראים לי יהלי אני מציע שירות שטיפת רכבים יסודית ומקצועית.✔ שטיפה חיצונית ✔ שטיפה פנימית ✔ ניקוי חישוקים ✔ ניקוי אבק ושאיבה בפנים הרכב ✔ ניגוב וייבוש מלא. שירות אמין, יסודי ובמחיר נוח </div>
         </div>
         <div class="order-2">
-            <img src="poster.jpg" class="rounded-[2rem] shadow-xl w-full h-64 object-cover border-4 border-white">
+            <img src="poster.jpg" onclick="openImg(this.src)" class="rounded-[2rem] shadow-xl w-full h-64 object-cover border-4 border-white clickable-img">
         </div>
     </section>
 
@@ -241,16 +264,16 @@
     <section class="py-12 px-5">
         <h2 class="text-2xl font-black mb-6 text-center italic text-blue-600 underline decoration-blue-200 underline-offset-4">העבודות שלנו</h2>
         <div class="grid grid-cols-2 gap-3">
-            <img src="wheel.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="inside.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="side.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="main.jfif" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="car1.jpeg" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="car2.jpeg" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="car3.jpeg" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="car4.jpeg" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="car5.jpeg" class="rounded-2xl h-40 w-full object-cover shadow-md">
-            <img src="car10.png" class="rounded-2xl h-40 w-full object-cover shadow-md">
+            <img src="wheel.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="inside.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="side.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="main.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="car1.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="car2.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="car3.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="car4.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="car5.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+            <img src="car10.png" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
         </div>
     </section>
 
