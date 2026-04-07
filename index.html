@@ -49,7 +49,7 @@
             fullImg.src = src;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            document.body.style.overflow = 'hidden'; // מונע גלילה ברקע
+            document.body.style.overflow = 'hidden'; 
         };
 
         window.closeImg = () => {
@@ -57,6 +57,30 @@
             document.getElementById('imgModal').classList.remove('flex');
             document.body.style.overflow = 'auto';
         };
+
+        // פונקציות גלריה
+        let currentSlide = 0;
+        const images = ["wheel.jfif", "inside.jfif", "side.jfif", "main.jfif", "car1.jpeg", "car2.jpeg", "car3.jpeg", "car4.jpeg", "car5.jpeg", "car10.png"];
+
+        window.toggleGallery = () => {
+            const gallery = document.getElementById('gallery-container');
+            gallery.classList.toggle('hidden');
+            if(!gallery.classList.contains('hidden')) {
+                updateSlide();
+                gallery.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        window.moveSlide = (direction) => {
+            currentSlide = (currentSlide + direction + images.length) % images.length;
+            updateSlide();
+        };
+
+        function updateSlide() {
+            const sliderImg = document.getElementById('slider-img');
+            sliderImg.src = images[currentSlide];
+            document.getElementById('slide-counter').innerText = `${currentSlide + 1} / ${images.length}`;
+        }
 
         async function sendToDiscord(stars) {
             const WEBHOOK_URL = "https://discord.com/api/webhooks/1488855382528098465/hLB3iMw3Xv_T37oQxHe3G8MuqxX0bFhpkhxKsldsmXqJFrJ1kTXMfdUd7egFWzf_C_7G";
@@ -197,6 +221,10 @@
         input, textarea { font-size: 16px !important; }
         .clickable-img { cursor: pointer; transition: 0.3s; }
         .clickable-img:hover { opacity: 0.9; transform: scale(1.02); }
+        
+        /* Slider Styles */
+        .slider-btn { background: rgba(255,255,255,0.9); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; }
+        .slider-btn:active { scale: 0.9; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
@@ -261,19 +289,31 @@
         </div>
     </section>
 
-    <section class="py-12 px-5">
+    <section class="py-12 px-5 bg-slate-50">
         <h2 class="text-2xl font-black mb-6 text-center italic text-blue-600 underline decoration-blue-200 underline-offset-4">העבודות שלנו</h2>
-        <div class="grid grid-cols-2 gap-3">
-            <img src="wheel.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="inside.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="side.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="main.jfif" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="car1.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="car2.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="car3.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="car4.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="car5.jpeg" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
-            <img src="car10.png" onclick="openImg(this.src)" class="rounded-2xl h-40 w-full object-cover shadow-md clickable-img">
+        
+        <div class="flex justify-center mb-6">
+            <button onclick="toggleGallery()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold shadow-lg flex items-center gap-2 active:scale-95 transition">
+                <span>📸</span>
+                צפייה בגלריית עבודות
+            </button>
+        </div>
+
+        <div id="gallery-container" class="hidden max-w-lg mx-auto animate-fade-in">
+            <div class="relative group">
+                <div class="overflow-hidden rounded-[2.5rem] shadow-2xl border-4 border-white">
+                    <img id="slider-img" src="wheel.jfif" onclick="openImg(this.src)" class="w-full h-80 object-cover clickable-img">
+                </div>
+                
+                <button onclick="moveSlide(-1)" class="slider-btn absolute left-4 top-1/2 -translate-y-1/2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button onclick="moveSlide(1)" class="slider-btn absolute right-4 top-1/2 -translate-y-1/2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <div id="slide-counter" class="text-center mt-4 text-slate-500 font-bold text-sm">1 / 10</div>
         </div>
     </section>
 
