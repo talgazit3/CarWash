@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>יהלי CarWash | שטיפת רכבים פרימיום</title>
+    <title>יהלי CarWash</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
     
@@ -42,7 +42,6 @@
             }
         };
 
-        // פונקציות להגדלת תמונה
         window.openImg = (src) => {
             const modal = document.getElementById('imgModal');
             const fullImg = document.getElementById('fullImg');
@@ -198,14 +197,30 @@
         .clickable-img { cursor: pointer; transition: 0.3s; }
         .clickable-img:hover { opacity: 0.95; transform: scale(1.01); }
 
-        /* Carousel Styles */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .carousel-item { scroll-snap-align: center; flex: 0 0 85%; }
+
+        /* CSS של החסימה */
+        #payment-lock {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
 
+    <div id="payment-lock">
+        <h1 class="text-white text-4xl md:text-6xl font-black italic tracking-tighter animate-pulse">
+            האתר נסגר לצמיתות
+        </h1>
+    </div>
     <div id="imgModal" class="fixed inset-0 bg-black/90 z-[500] hidden items-center justify-center p-4" onclick="closeImg()">
         <span class="absolute top-5 left-5 text-white text-3xl font-bold cursor-pointer">&times;</span>
         <img id="fullImg" class="max-w-full max-h-full rounded-lg shadow-2xl animate-fade-in">
@@ -268,25 +283,12 @@
 
     <section class="py-12 px-5 bg-slate-50">
         <h2 class="text-2xl font-black mb-6 text-center italic text-blue-600 underline decoration-blue-200 underline-offset-4">העבודות שלנו</h2>
-        
         <div id="luxury-gallery" class="animate-fade-in">
             <div class="flex overflow-x-auto gap-4 px-4 pb-8 no-scrollbar" style="scroll-snap-type: x mandatory;">
                 <div class="carousel-item"><img src="wheel.jfif" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
                 <div class="carousel-item"><img src="inside.jfif" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
                 <div class="carousel-item"><img src="side.jfif" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
                 <div class="carousel-item"><img src="main.jfif" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car1.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car2.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car3.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car4.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car5.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car10.png" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car6.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car7.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car8.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car9.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                <div class="carousel-item"><img src="car11.jpeg" onclick="openImg(this.src)" class="rounded-[2rem] h-72 w-full object-cover shadow-2xl border-4 border-white clickable-img"></div>
-                
             </div>
             <p class="text-center text-slate-400 text-xs font-bold animate-pulse">← החלק לתמונות נוספות →</p>
         </div>
